@@ -1,0 +1,42 @@
+=== 環境處理 ===
+
+1. 確認是否有SQL DDL, DML需要過版, 如不衝突, 需提早提交兆豐DBA處理
+2. MQ新增也需要提前申請
+
+
+=== 過版資料處理 ===
+
+1. 依據過版清單將SIT的Commit, Cherrypick到UAT, 遇衝突請SD處理 (盡量使用cherrypick方式, 保留提交訊息以利後續追蹤查詢)
+2. 使用release.sh + 本次需過版commit的前一個commit ID, release.sh會產出過版相關資料及程式到output資料夾 (與release.sh同路徑)
+	A. 如果有單一commit要過 (之前未過), 改使用 export_commit.sh 去匯出 changes.csv, export_files資料夾
+	B. 如果是單一檔案, 則要另外人工整理 (ex. 包版時有相依性問題)
+3. 將產出的change.csv匯入過版清單excel檔案, 確認清單和export_files路徑下的檔案一致 (數量/路徑)
+	A. 列出檔案清單(僅檔名, 不含路徑: for /r "C:\Users\essences\Desktop\Workspace\版本更新紀錄\P1-2_UAT\20260428\release-note\export_files\source\fep" %f in (*) do @echo %~nxf  )
+	B. 列出檔案清單(包含路徑和檔名: dir /s /b /a-d "C:\Users\essences\Desktop\Workspace\版本更新紀錄\P1-2_UAT\20260428\release-note\export_files\source\fep"   )
+4. 如果有config異動, 則將相關資訊放置到參數檔異動頁面, 並將完整版的config檔案集中放置, 供客戶參考
+5. 如果有test程式檔案, 需再次確認是否需要, 如果只是UT, 就將其移除. 以下為已知要保留部份 (till 2026/03/24)
+	A. RemoveVersion: fep-batch, fep-server, fep-service, fep-web
+	B. fep-batch-task: AssemblyPropFileGenerator.java, ReleaseNoteGenerator.java
+6. 將預定過版的程式更新到專案內 (兆豐UAT版本), 包版看是否會有錯誤 (build.bat)
+	A. 如果有fep-web.war異動, 建議可先放到29測試環境確認是否可以啟動
+	B. 如果有enclib的異動, 則需要先於自家的UAT branch - enclib/fep-enclib 去包, 可以從以下幾個地方取得 (fep-enclib.jar)
+		a. enclib/fep-enclib/target/fep-enclib-1.0.0.jar
+		b. source/fep/fep-enchelper/lib/fep-enclib.jar
+		c. source/fep-assembly-library/fep-enclib.jar
+		d. 隨過版清單提供給兆豐, 包版前預先放到 source/fep/fep-enchelper/lib/
+7. 檔案清洗並e-mail兆豐做紀錄
+
+
+=== 過版清單整理 ===
+
+1. 看 SIT 是否進 UAT（只列出已經進UAT的, "-"號已進, "+"號未進）
+	cmd(final-輸出內容還沒有到UAT的), 包含commit, author, date, commit message
+		git cherry -v FEP_1-2_UAT FEP_1-2_SIT | grep '^+' | awk '{print $2}' | xargs -I {} git show -s --format="%h%x09%an%x09%ad%x09%s" --date=short {}
+
+	cmd: git cherry -v FEP_1-2_UAT FEP_1-2_SIT | grep '-'    (SIT 上的 commit，其內容已經存在於 UAT, 包含：cherry-pick 過去的, rebase 過的, patch 剛好一樣的, 不只限於 cherry-pick)還
+	cmd: git cherry -v FEP_1-2_UAT FEP_1-2_SIT | grep '^+'    (還沒過版到UAT的, git cherry 比的是「內容」，不是「歷史」)
+	cmd: git log FEP_1-2_UAT..FEP_1-2_SIT --oneline	(顯示「在 sit 上，但不在 uat 上」的 commit)
+        cmd: git log FEP_1-2_UAT..FEP_1-2_SIT --pretty=format:"%h %an %ad %s" --date=short  (可能會不包含cherry-pick, rebase, squash merge)
+2. 匯入excel篩選出未進的, 依據commit message比對 UAT 去找出對應的 commit
+3. 依據SIT的commit查找過版清單(線上), 填入UAT commit id, 並且更新過版日期
+4. Git Branch 打 tag 紀錄
