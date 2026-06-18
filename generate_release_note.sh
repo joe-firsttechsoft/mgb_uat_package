@@ -16,6 +16,17 @@ fi
 START_COMMIT=$1
 END_COMMIT="HEAD"
 
+PROJECT_DIR="${MGBFEP_PROJECT_DIR:-$HOME/Repo/idea_clone/mgbfep}"
+
+if [ ! -d "$PROJECT_DIR/.git" ]; then
+    echo "Project git directory not found: $PROJECT_DIR"
+    echo "Set MGBFEP_PROJECT_DIR to the MGBFEP repository path."
+    exit 1
+fi
+
+REPOROOT=$(cd "$PROJECT_DIR" && git rev-parse --show-toplevel)
+cd "$REPOROOT"
+
 FULL_START=$(git rev-parse "$START_COMMIT")
 FULL_END=$(git rev-parse "$END_COMMIT")
 

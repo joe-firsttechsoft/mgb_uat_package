@@ -9,9 +9,19 @@ PREV_RELEASE=$1
 END_COMMIT="HEAD"
 
 BASEDIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="${MGBFEP_PROJECT_DIR:-$HOME/Repo/idea_clone/mgbfep}"
+
+if [ ! -d "$PROJECT_DIR/.git" ]; then
+  echo "Project git directory not found: $PROJECT_DIR"
+  echo "Set MGBFEP_PROJECT_DIR to the MGBFEP repository path."
+  exit 1
+fi
+
+export MGBFEP_PROJECT_DIR="$PROJECT_DIR"
 
 echo "=================================="
 echo " Release from $PREV_RELEASE -> HEAD"
+echo " Project directory: $PROJECT_DIR"
 echo "=================================="
 
 # 1️⃣ 先匯出「整個過版區間」的檔案（會清 output）

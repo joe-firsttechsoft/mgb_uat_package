@@ -9,14 +9,21 @@ fi
 START=$1
 END=$2
 BASEDIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="${MGBFEP_PROJECT_DIR:-$HOME/Repo/idea_clone/mgbfep}"
 OUTDIR="$BASEDIR/output"
 FILEDIR="$OUTDIR/export_files"
 CSV="$OUTDIR/changes.csv"
 COMMITS="$OUTDIR/commits.csv"
 PATCH="$OUTDIR/changes.patch"
 
-# ── 切換到 repo root，確保所有 git 路徑一致 ──
-REPOROOT=$(git rev-parse --show-toplevel)
+# ── 切換到指定專案 repo root，確保所有 git 路徑一致 ──
+if [ ! -d "$PROJECT_DIR/.git" ]; then
+  echo "Project git directory not found: $PROJECT_DIR"
+  echo "Set MGBFEP_PROJECT_DIR to the MGBFEP repository path."
+  exit 1
+fi
+
+REPOROOT=$(cd "$PROJECT_DIR" && git rev-parse --show-toplevel)
 cd "$REPOROOT"
 
 # 若 output 已存在且非空，詢問是否清空
