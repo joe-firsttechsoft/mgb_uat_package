@@ -1,0 +1,9 @@
+{
+  "name": "mgb-uat-release-tools",
+  "private": true,
+  "type": "module",
+  "description": "Local tooling for MGB UAT release packaging (release.sh pipeline)",
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}

@@ -5,8 +5,8 @@
 # 顯示收集前與收集後檔案數量（因應同檔名覆蓋）
 
 BASEDIR="$(cd "$(dirname "$0")" && pwd)"
-SRCDIR="$BASEDIR/output/export_files"
-DESTDIR="$BASEDIR/output/files"
+SRCDIR="$BASEDIR/outputs/export_files"
+DESTDIR="$BASEDIR/outputs/files"
 
 if [ ! -d "$SRCDIR" ]; then
   echo "❌ Source directory not found: $SRCDIR"

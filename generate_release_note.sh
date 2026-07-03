@@ -4,7 +4,7 @@
 # 功能: 產生 Git Release Note，依模組分組，列出檔案變更，模組標題旁加檔案統計摘要
 # 過濾 Merge commit
 # 使用: ./generate_release_note.sh <start_commit_short_hash>
-# 輸出: ./output/FEP_RELEASE_NOTE_yyyy-mm-dd.md
+# 輸出: ./outputs/FEP_RELEASE_NOTE_yyyy-mm-dd.md
 
 set -e
 
@@ -34,7 +34,7 @@ DATE=$(date +%Y-%m-%d)
 
 # 取得 script 執行路徑
 BASEDIR="$(cd "$(dirname "$0")" && pwd)"
-OUTDIR="$BASEDIR/output"
+OUTDIR="$BASEDIR/outputs"
 
 mkdir -p "$OUTDIR"
 

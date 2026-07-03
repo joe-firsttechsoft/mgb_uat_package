@@ -10,7 +10,7 @@ START=$1
 END=$2
 BASEDIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="${MGBFEP_PROJECT_DIR:-$HOME/Repo/idea_clone/mgbfep}"
-OUTDIR="$BASEDIR/output"
+OUTDIR="$BASEDIR/outputs"
 FILEDIR="$OUTDIR/export_files"
 CSV="$OUTDIR/changes.csv"
 COMMITS="$OUTDIR/commits.csv"
@@ -26,9 +26,9 @@ fi
 REPOROOT=$(cd "$PROJECT_DIR" && git rev-parse --show-toplevel)
 cd "$REPOROOT"
 
-# 若 output 已存在且非空，詢問是否清空
+# 若 outputs 已存在且非空，詢問是否清空
 if [ -d "$OUTDIR" ] && [ "$(ls -A "$OUTDIR")" ]; then
-  read -p "⚠️ output not empty, clear and continue? (y/n): " ans
+  read -p "⚠️ outputs not empty, clear and continue? (y/n): " ans
   [ "$ans" != "y" ] && exit 1
   rm -rf "$OUTDIR"/*
 fi
