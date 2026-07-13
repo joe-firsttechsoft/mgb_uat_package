@@ -6,10 +6,11 @@
 import ExcelJS from "exceljs";
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 const [, , csvPath, outPath] = process.argv;
-const PROJECT_DIR = process.env.MGBFEP_PROJECT_DIR || "$HOME/Repo/idea_clone/mgbfep";
+const PROJECT_DIR = process.env.MGBFEP_PROJECT_DIR || path.join(os.homedir(), "Repo/idea_clone/mgbfep");
 const SOURCE_FEP_DIR = path.join(PROJECT_DIR, "source/fep");
 
 if (!csvPath || !outPath) {
