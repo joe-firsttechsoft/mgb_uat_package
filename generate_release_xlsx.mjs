@@ -8,6 +8,7 @@ import fs from "node:fs/promises";
 import fsSync from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { isTestPath, isKeptTestFile, isFepReleaseNotePath } from "./release_exclude.mjs";
 
 const [, , csvPath, outPath] = process.argv;
 const PROJECT_DIR = process.env.MGBFEP_PROJECT_DIR || path.join(os.homedir(), "Repo/idea_clone/mgbfep");
@@ -70,7 +71,8 @@ function isReleaseRow(row) {
   if (!allowed.has(ext(row["檔案名稱"]))) return false;
   if (row["檔案路徑"].startsWith("source/SIT套config")) return false;
   if (row["檔案路徑"].startsWith("source/開發套config")) return false;
-  if (row["檔案路徑"].startsWith("source/fep/fep-release-note")) return false;
+  if (isFepReleaseNotePath(row["檔案路徑"])) return false;
+  if (isTestPath(row["檔案路徑"]) && !isKeptTestFile(row["檔案名稱"])) return false;
   return true;
 }
 
