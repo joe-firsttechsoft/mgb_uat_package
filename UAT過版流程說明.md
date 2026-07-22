@@ -179,7 +179,7 @@ dir /s /b /a-d "C:\Users\essences\Desktop\Workspace\版本更新紀錄\P1-2_UAT\
 現行自動化排除規則（`release_exclude.mjs`）：
 
 - 排除路徑：`src/test/`（比照 `../mgb-vul/RemoveTest.ps1` 的 `-TestPathPattern`）
-- 保留例外（檔名含以下關鍵字，不分大小寫）：`BatchTaskUtil`、`AssemblyPropFileGenerator`、`ReleaseNoteGenerator`、`RemoveVersion`
+- 保留例外（檔名含以下關鍵字，不分大小寫）：`BatchTaskUtil`、`Generator`、`RemoveVersion`（`Generator` 原本是 `AssemblyPropFileGenerator`、`ReleaseNoteGenerator` 兩個具體檔名，因為都含有 `Generator` 字串、可以被這個較寬的關鍵字涵蓋，故合併簡化為單一關鍵字，順便涵蓋日後其他命名含 `Generator` 的 batch task 工具類別）
 - ⚠️ **與上面人工紀錄的差異**：`BatchTaskUtil` 是比照 `RemoveTest.ps1` 預設值新增的保留關鍵字，過往人工紀錄的保留清單中沒有列出這一項，過版時請留意確認是否為新增的保留規則，或是先前人工作業就已遺漏。
 
 **⚠️ 交付方式的重大限制（造成過至少一次客戶端編譯失敗的事故）**：`collect_files.sh` / `export_commit_range.sh` 的交付方式是把新增/修改的檔案**疊加覆蓋**到客戶既有環境，**不會主動刪除客戶端任何檔案**——包含 git 上真的被刪除的檔案、以及現在被自動排除、不再出現在交付包裡的 `src/test` 檔案。早期人工排除 `src/test` 時若未清乾淨，客戶環境可能還留有舊測試檔案；這些舊檔案不會因為改用程式排除而被自動清掉。若後續 main 原始碼異動使舊測試檔引用的 API 被修改/移除，客戶端會編譯失敗。

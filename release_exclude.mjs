@@ -6,7 +6,7 @@
 // 排除 src/test 邏輯比照 ../mgb-vul/RemoveTest.ps1：路徑落在 src/test/ 底下的一律排除，
 // 但檔名包含下列關鍵字（不分大小寫）的例外保留（該 ps1 預設 Mode "1" 的行為）
 const TEST_PATH_PATTERN = /(^|\/)src\/test\//;
-const KEEP_TEST_NAME_PARTS = ["BatchTaskUtil", "AssemblyPropFileGenerator", "ReleaseNoteGenerator", "RemoveVersion"];
+const KEEP_TEST_NAME_PARTS = ["BatchTaskUtil", "Generator", "RemoveVersion"];
 
 export function isTestPath(p) {
   return TEST_PATH_PATTERN.test(p);
