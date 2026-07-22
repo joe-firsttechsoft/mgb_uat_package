@@ -8,7 +8,8 @@ import fs from "node:fs/promises";
 import fsSync from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { isTestPath, isKeptTestFile, isFepReleaseNotePath } from "./release_exclude.mjs";
+import { isTestPath, isKeptTestFile, isFepReleaseNotePath, isUnchangedResourceFile } from "./release_exclude.mjs";
+import { parseCsv } from "./release_csv.mjs";
 
 const [, , csvPath, outPath] = process.argv;
 const PROJECT_DIR = process.env.MGBFEP_PROJECT_DIR || path.join(os.homedir(), "Repo/idea_clone/mgbfep");
@@ -19,47 +20,6 @@ if (!csvPath || !outPath) {
   process.exit(1);
 }
 
-function parseCsv(text) {
-  const rows = [];
-  let row = [];
-  let field = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i += 1) {
-    const ch = text[i];
-    const next = text[i + 1];
-    if (quoted) {
-      if (ch === '"' && next === '"') {
-        field += '"';
-        i += 1;
-      } else if (ch === '"') {
-        quoted = false;
-      } else {
-        field += ch;
-      }
-    } else if (ch === '"') {
-      quoted = true;
-    } else if (ch === ",") {
-      row.push(field);
-      field = "";
-    } else if (ch === "\n") {
-      row.push(field.replace(/\r$/, ""));
-      rows.push(row);
-      row = [];
-      field = "";
-    } else {
-      field += ch;
-    }
-  }
-  if (field || row.length) {
-    row.push(field.replace(/\r$/, ""));
-    rows.push(row);
-  }
-  const headers = rows.shift();
-  return rows
-    .filter((r) => r.some((v) => v !== ""))
-    .map((r) => Object.fromEntries(headers.map((h, i) => [h, r[i] ?? ""])));
-}
-
 function ext(name) {
   const dot = name.lastIndexOf(".");
   return dot >= 0 ? name.slice(dot).toLowerCase() : "";
@@ -67,12 +27,18 @@ function ext(name) {
 
 function isReleaseRow(row) {
   if (row["動作"] === "刪除") return false;
-  const allowed = new Set([".java", ".xml", ".html", ".js", ".txt", ".jar", ".sql", ".css"]);
-  if (!allowed.has(ext(row["檔案名稱"]))) return false;
+  // 異動清單只列 source/fep/ 下的異動，enclib/fep-enclib（另外打包成 jar 手動放入 fep-enchelper/lib）、
+  // tools/fep-mock-server（內部測試工具）等不屬於實際交付給客戶的原始碼，不列入
+  if (!row["檔案路徑"].startsWith("source/fep/")) return false;
   if (row["檔案路徑"].startsWith("source/SIT套config")) return false;
   if (row["檔案路徑"].startsWith("source/開發套config")) return false;
   if (isFepReleaseNotePath(row["檔案路徑"])) return false;
   if (isTestPath(row["檔案路徑"]) && !isKeptTestFile(row["檔案名稱"])) return false;
+  // properties 例外：一般 resource properties（source/fep/**）跟 UAT套config 環境設定檔一律不列進異動清單，
+  // 前者隨模組整包部署不需單獨列出，後者已經在「設定檔」分頁單獨列出
+  if (ext(row["檔案名稱"]) === ".properties") return false;
+  // 圖片／字型等二進位資源：檔名沒變（動作＝修改）就不列，只有檔名真的不同（新增／重新命名）才列入
+  if (isUnchangedResourceFile(row["檔案名稱"], row["動作"])) return false;
   return true;
 }
 
@@ -262,6 +228,14 @@ const dbRows = rows
   .filter((r) => ext(r["檔案名稱"]) === ".sql")
   .map((r, i) => [i + 1, r["檔案名稱"], r["檔案路徑"], r["動作"], r["Commit Message"]]);
 
+// 測試檔排除清單：交付包（異動清單／收集檔案）一律排除 src/test，且交付方式是把新增/修改檔案
+// 疊加到客戶既有環境，不會主動刪除任何檔案（含 git 上真的被刪除的檔案）。
+// 這裡直接取未過濾的 rows，連「動作=刪除」的 src/test 異動都列出來，
+// 讓客戶知道這次 commit 範圍動到了哪些測試路徑，可對照環境手動確認/刪除舊檔，避免跟新版原始碼不相容而編譯失敗。
+const excludedTestRows = rows
+  .filter((r) => isTestPath(r["檔案路徑"]) && !isKeptTestFile(r["檔案名稱"]))
+  .map((r, i) => [i + 1, r["檔案名稱"], r["檔案路徑"], r["動作"], r["Commit Message"]]);
+
 // 模組更新的模組清單，直接取自「異動清單」已過濾後的 changeRows，確保兩張表對得起來
 const changedModules = new Set(
   changeRows
@@ -287,6 +261,16 @@ writeTable(
 const settingSheet = workbook.addWorksheet("設定檔");
 writeTable(settingSheet, ["主機", "帳號", "路徑", "修改檔案", "修改內容"], settings, [24, 14, 30, 34, 100]);
 
+if (excludedTestRows.length > 0) {
+  const testSheet = workbook.addWorksheet("測試檔排除清單(需人工確認)");
+  writeTable(
+    testSheet,
+    ["Index", "測試檔案", "位置", "異動類型", "Commit Message"],
+    excludedTestRows,
+    [8, 34, 72, 12, 100],
+  );
+}
+
 if (dbRows.length > 0) {
   const dbSheet = workbook.addWorksheet("資料庫異動");
   writeTable(dbSheet, ["Index", "修改檔案", "位置", "異動類型", "修改內容"], dbRows, [8, 34, 72, 12, 100]);
@@ -301,6 +285,7 @@ console.log(
   JSON.stringify({
     changes: changeRows.length,
     settings: settings.length,
+    excludedTest: excludedTestRows.length,
     db: dbRows.length,
     modules: modules.length,
     outPath,

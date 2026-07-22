@@ -21,10 +21,35 @@ export function isFepReleaseNotePath(p) {
   return p.includes("fep-release-note");
 }
 
+// source/fep/** 底下的一般模組內建 resource properties（打包進 jar，隨模組整包部署，
+// 不是 source/UAT套config/ 下那種需要單獨列出來給客戶對照覆蓋的環境設定檔）
+export function isFepModuleProperties(p) {
+  return p.startsWith("source/fep/") && p.toLowerCase().endsWith(".properties");
+}
+
+function extOf(name) {
+  const dot = name.lastIndexOf(".");
+  return dot >= 0 ? name.slice(dot).toLowerCase() : "";
+}
+
+// 圖片／字型等二進位靜態資源：檔名沒變（git 動作＝修改）就不列出／收集，
+// 只有檔名真的不同（新增／重新命名／複製）才列入，避免整包重新輸出的資源檔洗版異動清單
+const RESOURCE_EXTENSIONS = new Set([
+  ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".svg",
+  ".eot", ".ttf", ".woff", ".woff2", ".otf", ".map",
+]);
+
+export function isUnchangedResourceFile(name, action) {
+  return RESOURCE_EXTENSIONS.has(extOf(name)) && action === "修改";
+}
+
 // relPath: 相對於專案 repo root 的路徑（例如 source/fep/fep-server/src/test/xxx.java）
-export function isExcludedPath(relPath) {
+// action: changes.csv 的「動作」欄位（新增／修改／刪除／重新命名／複製），用來判斷二進位資源是否為同檔名異動
+export function isExcludedPath(relPath, action) {
   const name = relPath.split("/").pop() ?? relPath;
   if (isFepReleaseNotePath(relPath)) return true;
   if (isTestPath(relPath) && !isKeptTestFile(name)) return true;
+  if (isFepModuleProperties(relPath)) return true;
+  if (isUnchangedResourceFile(name, action)) return true;
   return false;
 }
