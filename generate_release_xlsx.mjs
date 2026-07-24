@@ -8,7 +8,7 @@ import fs from "node:fs/promises";
 import fsSync from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { isTestPath, isKeptTestFile, isFepReleaseNotePath, isUnchangedResourceFile } from "./release_exclude.mjs";
+import { isTestPath, isKeptTestFile, isFepReleaseNotePath } from "./release_exclude.mjs";
 import { parseCsv } from "./release_csv.mjs";
 
 const [, , csvPath, outPath] = process.argv;
@@ -37,8 +37,6 @@ function isReleaseRow(row) {
   // properties 例外：一般 resource properties（source/fep/**）跟 UAT套config 環境設定檔一律不列進異動清單，
   // 前者隨模組整包部署不需單獨列出，後者已經在「設定檔」分頁單獨列出
   if (ext(row["檔案名稱"]) === ".properties") return false;
-  // 圖片／字型等二進位資源：檔名沒變（動作＝修改）就不列，只有檔名真的不同（新增／重新命名）才列入
-  if (isUnchangedResourceFile(row["檔案名稱"], row["動作"])) return false;
   return true;
 }
 

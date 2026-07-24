@@ -2,9 +2,8 @@
 set -e
 
 # 檔名: collect_files.sh
-# 功能: 依 changes.csv + export_files 內容，排除 src/test（保留例外）、fep-release-note、
-#       source/fep/** 下的 .properties、以及檔名未變的二進位資源檔（動作＝修改）後，
-#       同時產生兩種收集結果：
+# 功能: 依 export_files 內容，排除 src/test（保留例外）、fep-release-note、
+#       source/fep/** 下的 .properties 後，同時產生兩種收集結果：
 #         - files/         扁平化（僅保留檔名，同檔名會互相覆蓋，方便單純瀏覽/比對檔名）
 #         - release_files/ 保留原始目錄結構（實際交付/覆蓋客戶環境請用這份，不會有同檔名覆蓋問題）
 #       排除規則跟 generate_release_xlsx.mjs 的「異動清單」共用同一份 release_exclude.mjs，
@@ -12,15 +11,9 @@ set -e
 # 顯示收集前與收集後檔案數量（因應同檔名覆蓋）
 
 BASEDIR="$(cd "$(dirname "$0")" && pwd)"
-CSV="$BASEDIR/outputs/changes.csv"
 SRCDIR="$BASEDIR/outputs/export_files"
 DESTDIR="$BASEDIR/outputs/files"
 STRUCTDIR="$BASEDIR/outputs/release_files"
-
-if [ ! -f "$CSV" ]; then
-  echo "❌ changes.csv not found: $CSV"
-  exit 1
-fi
 
 if [ ! -d "$SRCDIR" ]; then
   echo "❌ Source directory not found: $SRCDIR"
@@ -37,14 +30,14 @@ echo "▶ Scanning files to collect..."
 TOTAL_SRC=$(find "$SRCDIR" -type f | wc -l | tr -d ' ')
 echo "📄 Files before collect: $TOTAL_SRC"
 
-# 2️⃣ 依 changes.csv 產生排除後應收集的清單
+# 2️⃣ 產生排除後應收集的清單
 MANIFEST=$(mktemp)
 trap 'rm -f "$MANIFEST"' EXIT
-node "$BASEDIR/list_collect_files.mjs" "$CSV" "$SRCDIR" > "$MANIFEST"
+node "$BASEDIR/list_collect_files.mjs" "$SRCDIR" > "$MANIFEST"
 
 TOTAL_FILTERED=$(wc -l < "$MANIFEST" | tr -d ' ')
 TOTAL_EXCLUDED=$((TOTAL_SRC - TOTAL_FILTERED))
-echo "🚫 Excluded (src/test, fep-release-note, .properties, 同檔名資源): $TOTAL_EXCLUDED"
+echo "🚫 Excluded (src/test, fep-release-note, .properties): $TOTAL_EXCLUDED"
 
 # 3️⃣ 收集檔案：files/ 扁平化、release_files/ 保留目錄結構
 while IFS= read -r REL; do
