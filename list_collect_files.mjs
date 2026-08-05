@@ -1,6 +1,7 @@
 // 檔名: list_collect_files.mjs
-// 功能: 列出 export_files 資料夾底下、排除 src/test（保留例外）、fep-release-note、
+// 功能: 列出 export_files 資料夾底下、排除 src/test（保留例外）、
 //       source/fep/** 的 .properties 後應該被收集的檔案相對路徑（一行一個），供 collect_files.sh 使用。
+//       fep-release-note 不排除，照常收集。
 //       排除規則與 generate_release_xlsx.mjs 共用同一份 release_exclude.mjs，
 //       確保「異動清單」文件與實際收集的檔案彼此同步，不會各自維護出落差。
 // 使用: node list_collect_files.mjs <export_files 資料夾>

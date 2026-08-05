@@ -234,6 +234,11 @@ const excludedTestRows = rows
   .filter((r) => isTestPath(r["檔案路徑"]) && !isKeptTestFile(r["檔案名稱"]))
   .map((r, i) => [i + 1, r["檔案名稱"], r["檔案路徑"], r["動作"], r["Commit Message"]]);
 
+// fep-release-note：不再排除，但跟一般原始碼異動分開列，格式比照「異動清單」（排除「刪除」）
+const releaseNoteRows = rows
+  .filter((r) => r["動作"] !== "刪除" && isFepReleaseNotePath(r["檔案路徑"]))
+  .map((r, i) => [i + 1, r["檔案名稱"], r["檔案路徑"], r["動作"], r["Commit Message"]]);
+
 // 模組更新的模組清單，直接取自「異動清單」已過濾後的 changeRows，確保兩張表對得起來
 const changedModules = new Set(
   changeRows
@@ -269,6 +274,16 @@ if (excludedTestRows.length > 0) {
   );
 }
 
+if (releaseNoteRows.length > 0) {
+  const releaseNoteSheet = workbook.addWorksheet("fep-release-note清單");
+  writeTable(
+    releaseNoteSheet,
+    ["Index", "修改檔案", "位置", "異動類型", "修改內容"],
+    releaseNoteRows,
+    [8, 34, 72, 12, 100],
+  );
+}
+
 if (dbRows.length > 0) {
   const dbSheet = workbook.addWorksheet("資料庫異動");
   writeTable(dbSheet, ["Index", "修改檔案", "位置", "異動類型", "修改內容"], dbRows, [8, 34, 72, 12, 100]);
@@ -284,6 +299,7 @@ console.log(
     changes: changeRows.length,
     settings: settings.length,
     excludedTest: excludedTestRows.length,
+    releaseNote: releaseNoteRows.length,
     db: dbRows.length,
     modules: modules.length,
     outPath,

@@ -59,7 +59,7 @@ flowchart TD
 | `release.sh` | **主流程**：一次完成匯出、Release Note、檔案收集 | `./release.sh <前一個過版 tag 或 commit>` |
 | `export_commit_range.sh` | 匯出指定 commit 區間的變更檔案與 CSV | `./export_commit_range.sh <start> <end>` |
 | `generate_release_note.sh` | 產生依模組分組的 Markdown Release Note | `./generate_release_note.sh <start_commit>` |
-| `collect_files.sh` | 將 `export_files/` 排除 `src/test`／`fep-release-note`／`source/fep/**` 下 `.properties`／檔名未變的二進位資源檔後收集到 `files/`（扁平化）與 `release_files/`（保留目錄結構） | `./collect_files.sh`（需先執行匯出） |
+| `collect_files.sh` | 將 `export_files/` 排除 `src/test`／`source/fep/**` 下 `.properties`／檔名未變的二進位資源檔後收集到 `files/`（扁平化）與 `release_files/`（保留目錄結構）；`fep-release-note` 不排除，照常收集 | `./collect_files.sh`（需先執行匯出） |
 
 > 原流程文件中的 `export_commit.sh` 對應實際檔名 **`export_commit_range.sh`**。
 
@@ -73,7 +73,7 @@ flowchart TD
 
 1. **`export_commit_range.sh`** — 匯出整個過版區間（若 `output/` 非空會詢問是否清空）
 2. **`generate_release_note.sh`** — 補產 Release Note 文件
-3. **`collect_files.sh`** — 排除 `src/test`／`fep-release-note`／`source/fep/**` 下 `.properties`／檔名未變的二進位資源檔後收集檔案，方便交付（`files/` 扁平化 + `release_files/` 保留目錄結構）
+3. **`collect_files.sh`** — 排除 `src/test`／`source/fep/**` 下 `.properties`／檔名未變的二進位資源檔後收集檔案，方便交付（`fep-release-note` 不排除，照常收集；`files/` 扁平化 + `release_files/` 保留目錄結構）
 
 #### `export_commit_range.sh` 實際邏輯
 
@@ -94,7 +94,7 @@ flowchart TD
 | `changes.csv` | 欄位：`檔案名稱,檔案路徑,動作,Commit Message`；動作含新增/修改/刪除/重新命名/複製 |
 | `commits.csv` | 欄位：`Commit,Author,Date,Message`；涵蓋 `START~1..END` 區間（含 START 本身） |
 | `changes.patch` | `git diff START END` 完整 patch |
-| `export_files/` | 保留原始目錄結構；刪除的檔案不匯出；其餘以 `git show END:path` 取 END 版本內容；**完整原始備份，不套用任何排除規則**（`src/test`／`fep-release-note` 都還在） |
+| `export_files/` | 保留原始目錄結構；刪除的檔案不匯出；其餘以 `git show END:path` 取 END 版本內容；**完整原始備份，不套用任何排除規則**（`src/test` 都還在；`fep-release-note` 本來就不排除） |
 
 **檔案狀態處理**（`git diff --name-status -z`）：
 
@@ -113,7 +113,7 @@ flowchart TD
 #### `collect_files.sh` 產出
 
 - 來源：`output/export_files/`
-- 複製前會先讀 `changes.csv`，套用 `release_exclude.mjs` 的排除規則（`src/test`、`fep-release-note`、`source/fep/**` 下的 `.properties`、檔名未變的二進位資源檔（圖片／字型，動作＝修改），邏輯與異動清單/測試檔排除清單分頁共用）；執行時會分別印出「排除前」「排除後」「files/ 收集後」「release_files/ 收集後」四個數字
+- 複製前會先讀 `changes.csv`，套用 `release_exclude.mjs` 的排除規則（`src/test`、`source/fep/**` 下的 `.properties`、檔名未變的二進位資源檔（圖片／字型，動作＝修改），邏輯與異動清單/測試檔排除清單分頁共用）；`fep-release-note` 不在排除規則內，會照常收集（xlsx 另列「fep-release-note清單」分頁）；執行時會分別印出「排除前」「排除後」「files/ 收集後」「release_files/ 收集後」四個數字
 - 同時輸出兩份，**用途不同、不能混用**：
 
   | 目錄 | 結構 | ⚠️ 用途 |
@@ -132,8 +132,8 @@ output/
 ├── commits.csv          # commit 清單
 ├── changes.patch        # 完整 diff patch
 ├── export_files/        # 保留目錄結構的原始檔案（未排除，完整備份）
-├── files/                # 扁平化後的檔案（已排除 src/test／fep-release-note／properties／同檔名資源，僅供核對檔名）
-├── release_files/        # 保留目錄結構、已排除 src/test／fep-release-note／properties／同檔名資源 ← 實際交付用這份
+├── files/                # 扁平化後的檔案（已排除 src/test／properties／同檔名資源，fep-release-note 照常收集，僅供核對檔名）
+├── release_files/        # 保留目錄結構、已排除 src/test／properties／同檔名資源，fep-release-note 照常收集 ← 實際交付用這份
 └── FEP_RELEASE_NOTE_yyyy-mm-dd.md
 ```
 
@@ -145,7 +145,7 @@ output/
 ### 步驟 3：核對過版清單
 
 1. 將產出的 `changes.csv` 匯入 Excel 過版清單
-2. ⚠️ **`export_files/` 保留全部原始匯出檔案（未排除任何內容）**，跟 Excel「異動清單」分頁的數量不會 1:1 對應，因為異動清單只收 `source/fep/` 底下的異動（見下方「Excel 產出格式」表）。但 **`output/release_files/source/fep/` 的實際檔案數，應該要跟「異動清單」分頁的筆數完全一致**（兩邊共用同一份 `release_exclude.mjs` 排除規則：`src/test`、`fep-release-note`、`source/fep/**` 下的 `.properties`、檔名未變的二進位資源檔），如果對不起來就是排除規則跑掉了，要回頭檢查。`output/files/`（扁平化）因為同名檔案會互相覆蓋，數量會比 `release_files/` 少，不能拿來核對筆數
+2. ⚠️ **`export_files/` 保留全部原始匯出檔案（未排除任何內容）**，跟 Excel「異動清單」分頁的數量不會 1:1 對應，因為異動清單只收 `source/fep/` 底下的異動，且 `fep-release-note` 改列在獨立的「fep-release-note清單」分頁（見下方「Excel 產出格式」表）。但 **`output/release_files/source/fep/` 的實際檔案數，應該要跟「異動清單」＋「fep-release-note清單」分頁的筆數總和完全一致**（三者共用同一份 `release_exclude.mjs` 排除規則：`src/test`、`source/fep/**` 下的 `.properties`、檔名未變的二進位資源檔；`fep-release-note` 不排除），如果對不起來就是排除規則跑掉了，要回頭檢查。`output/files/`（扁平化）因為同名檔案會互相覆蓋，數量會比 `release_files/` 少，不能拿來核對筆數
 3. 可用以下 Windows 指令列出檔案（路徑請依實際過版日期目錄調整）：
 
 ```cmd
@@ -186,7 +186,7 @@ dir /s /b /a-d "C:\Users\essences\Desktop\Workspace\版本更新紀錄\P1-2_UAT\
 
 **因應方式**：`generate_release_xlsx.mjs` 產出的 xlsx 若偵測到本次 commit 範圍有 `src/test` 異動（含新增/修改/刪除），會額外產生「**測試檔排除清單(需人工確認)**」分頁，列出所有被排除的路徑與異動類型。**每次過版都要對照這頁清單，請客戶依清單自行確認並手動刪除環境中對應的舊測試檔案**，不能只依賴交付包內容。
 
-**⚠️ 實際打包/覆蓋客戶環境請用 `output/release_files/`**（保留目錄結構、已套用排除規則），不要再用未排除的 `output/export_files/` 手動整理——這正是先前造成客戶端編譯失敗的原因：`export_files/` 內容完整未過濾，若步驟7憑印象手動清 test 檔沒清乾淨，就會把 `src/test` 檔案一起疊加到客戶環境。改用 `release_files/` 後，程式已保證不含 `src/test`／`fep-release-note`，不用再手動判斷哪些該留、哪些該刪。
+**⚠️ 實際打包/覆蓋客戶環境請用 `output/release_files/`**（保留目錄結構、已套用排除規則），不要再用未排除的 `output/export_files/` 手動整理——這正是先前造成客戶端編譯失敗的原因：`export_files/` 內容完整未過濾，若步驟7憑印象手動清 test 檔沒清乾淨，就會把 `src/test` 檔案一起疊加到客戶環境。改用 `release_files/` 後，程式已保證不含 `src/test`，不用再手動判斷哪些該留、哪些該刪（`fep-release-note` 本來就要交付，不在排除之列）。
 
 ### 步驟 6：更新兆豐 UAT 專案並建置
 
@@ -221,7 +221,7 @@ call mvn clean install -Dmaven.repo.local=E:/maven/repository -pl fep-web -Pwar
 
 最後清理過版包（移除不必要檔案），email 給兆豐做正式紀錄。
 
-> ⚠️ 打包來源請用 `output/release_files/`（已排除 `src/test`／`fep-release-note`，保留目錄結構），不要用 `output/export_files/`（未排除的完整原始備份）手動清理——手動清理容易漏，是先前造成客戶端編譯失敗的根因。
+> ⚠️ 打包來源請用 `output/release_files/`（已排除 `src/test`，保留目錄結構；`fep-release-note` 照常收集），不要用 `output/export_files/`（未排除的完整原始備份）手動清理——手動清理容易漏，是先前造成客戶端編譯失敗的根因。
 
 ---
 

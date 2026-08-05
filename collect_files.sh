@@ -2,8 +2,8 @@
 set -e
 
 # 檔名: collect_files.sh
-# 功能: 依 export_files 內容，排除 src/test（保留例外）、fep-release-note、
-#       source/fep/** 下的 .properties 後，同時產生兩種收集結果：
+# 功能: 依 export_files 內容，排除 src/test（保留例外）、
+#       source/fep/** 下的 .properties 後（fep-release-note 不排除，照常收集），同時產生兩種收集結果：
 #         - files/         扁平化（僅保留檔名，同檔名會互相覆蓋，方便單純瀏覽/比對檔名）
 #         - release_files/ 保留原始目錄結構（實際交付/覆蓋客戶環境請用這份，不會有同檔名覆蓋問題）
 #       排除規則跟 generate_release_xlsx.mjs 的「異動清單」共用同一份 release_exclude.mjs，
@@ -37,7 +37,7 @@ node "$BASEDIR/list_collect_files.mjs" "$SRCDIR" > "$MANIFEST"
 
 TOTAL_FILTERED=$(wc -l < "$MANIFEST" | tr -d ' ')
 TOTAL_EXCLUDED=$((TOTAL_SRC - TOTAL_FILTERED))
-echo "🚫 Excluded (src/test, fep-release-note, .properties): $TOTAL_EXCLUDED"
+echo "🚫 Excluded (src/test, .properties): $TOTAL_EXCLUDED"
 
 # 3️⃣ 收集檔案：files/ 扁平化、release_files/ 保留目錄結構
 while IFS= read -r REL; do
