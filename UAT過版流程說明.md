@@ -150,10 +150,10 @@ output/
 
 ```cmd
 :: 僅檔名（不含路徑）
-for /r "C:\Users\essences\Desktop\Workspace\版本更新紀錄\P1-2_UAT\20260428\release-note\export_files\source\fep" %f in (*) do @echo %~nxf
+for /r "C:\Users\essences\Desktop\Workspace\版本更新紀錄\P1-3_UAT\20260817\release-note\export_files\source\fep" %f in (*) do @echo %~nxf
 
 :: 完整路徑 + 檔名
-dir /s /b /a-d "C:\Users\essences\Desktop\Workspace\版本更新紀錄\P1-2_UAT\20260428\release-note\export_files\source\fep"
+dir /s /b /a-d "C:\Users\essences\Desktop\Workspace\版本更新紀錄\P1-3_UAT\20260817\release-note\export_files\source\fep"
 ```
 
 > 腳本預設輸出至 repo 內 `output/export_files/`；若交付前會複製到「版本更新紀錄」工作目錄，核對時以實際交付路徑為準。

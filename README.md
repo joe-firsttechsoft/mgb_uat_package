@@ -57,7 +57,7 @@ outputs/
 ├── export_files/                            # 保留目錄結構的原始檔案
 ├── files/                                   # 扁平化後的交付用檔案
 ├── FEP_RELEASE_NOTE_yyyy-mm-dd.md           # Release Note
-└── yyyyMMdd-P1-2 兆豐UAT異動項目.xlsx        # 異動清單／設定檔／(資料庫異動)／模組更新
+└── yyyyMMdd-P1-3 兆豐UAT異動項目.xlsx        # 異動清單／設定檔／(資料庫異動)／模組更新
 ```
 
 ## 文件
