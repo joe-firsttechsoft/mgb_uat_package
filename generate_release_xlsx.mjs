@@ -105,7 +105,8 @@ function noteForFile(file) {
 }
 
 // AP1/AP2 兆豐 UAT 專案實際部署的封裝檔（tar.gz），依 pom.xml 的 assembly 設定歸納：
-// fep-server 全部 5 種變種都要列（atm/fisc/mb/hce/lateresponse）；fep-service 用 appmon/ems/cbstimeoutrerun 三種變種
+// fep-server 全部 8 種變種都要列（atm/fisc/mb/hce/lateresponse/eatm/cbs/camp）；
+// fep-service 全部 6 種變種都要列（ems/log/appmon/ibsmq/cbstimeoutrerun/sendfisc2160）
 // 這些封裝檔包含各自模組「遞迴展開後」的所有 fep-* 依賴，只要依賴的原始碼有異動就必須整包重新部署
 const PACKAGE_DEFS = [
   { entryModule: "fep-server", label: "FEP-SERVER-ATM", file: "fep-server-bin-atm.tar.gz" },
@@ -113,9 +114,15 @@ const PACKAGE_DEFS = [
   { entryModule: "fep-server", label: "FEP-SERVER-MB", file: "fep-server-bin-mb.tar.gz" },
   { entryModule: "fep-server", label: "FEP-SERVER-HCE", file: "fep-server-bin-hce.tar.gz" },
   { entryModule: "fep-server", label: "FEP-SERVER-LATERESPONSE", file: "fep-server-bin-lateresponse.tar.gz" },
+  { entryModule: "fep-server", label: "FEP-SERVER-EATM", file: "fep-server-bin-eatm.tar.gz" },
+  { entryModule: "fep-server", label: "FEP-SERVER-CBS", file: "fep-server-bin-cbs.tar.gz" },
+  { entryModule: "fep-server", label: "FEP-SERVER-CAMP", file: "fep-server-bin-camp.tar.gz" },
   { entryModule: "fep-service", label: "FEP-SERVICE-APPMON", file: "fep-service-bin-appmon.tar.gz" },
   { entryModule: "fep-service", label: "FEP-SERVICE-EMS", file: "fep-service-bin-ems.tar.gz" },
   { entryModule: "fep-service", label: "FEP-SERVICE-CBSTIMEOUTRERUN", file: "fep-service-bin-cbstimeoutrerun.tar.gz" },
+  { entryModule: "fep-service", label: "FEP-SERVICE-LOG", file: "fep-service-bin-log.tar.gz" },
+  { entryModule: "fep-service", label: "FEP-SERVICE-IBSMQ", file: "fep-service-bin-ibsmq.tar.gz" },
+  { entryModule: "fep-service", label: "FEP-SERVICE-SENDFISC2160", file: "fep-service-bin-sendfisc2160.tar.gz" },
   { entryModule: "fep-batch", label: "FEP-BATCH", file: "fep-batch-bin.tar.gz" },
   { entryModule: "fep-batch-cmdline", label: "FEP-BATCH-CMDLINE", file: "fep-batch-cmdline-bin.tar.gz" },
 ];
