@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 這次過版預期使用的分支，非此分支時會詢問是否仍要繼續
-EXPECTED_BRANCH="FEP_1-3_UAT"
+EXPECTED_BRANCH="FEP_1-3-2_UAT"
 
 if [ $# -gt 1 ]; then
   echo "Usage: $0 [previous_release_tag_or_commit]"
@@ -52,16 +52,30 @@ if [ -z "$PREV_RELEASE" ]; then
     exit 1
   fi
   LAST_RELEASE_TAG=""
+  SKIPPED_TAGS=""
   for t in $(cd "$REPOROOT" && git tag -l "${TAG_PREFIX}/[0-9][0-9][0-9][0-9][0-9][0-9]" | sort -r); do
     if (cd "$REPOROOT" && git merge-base --is-ancestor "$t" HEAD 2>/dev/null); then
       LAST_RELEASE_TAG="$t"
       break
     fi
+    SKIPPED_TAGS="$SKIPPED_TAGS $t"
   done
   if [ -z "$LAST_RELEASE_TAG" ]; then
     echo "未提供前次 release commit，且在目前分支歷史中找不到符合 ${TAG_PREFIX}/yyMMdd 格式的 tag。"
     echo "Usage: $0 [previous_release_tag_or_commit]"
     exit 1
+  fi
+  # 名稱較新卻不是目前 HEAD 祖先的 tag，代表它建立在其他分支上、還沒併回目前這條分支歷史，
+  # 若這次沒把該分支併進來就直接比對，該分支上的異動會被漏算
+  if [ -n "$SKIPPED_TAGS" ]; then
+    echo "⚠️  發現名稱較新、但不在目前分支歷史中的 release tag:$SKIPPED_TAGS"
+    echo "   這可能代表有分支已建立過較新的 release tag，但尚未併入目前的 '$CURRENT_BRANCH'，"
+    echo "   若未併入就直接比對，該分支上的異動不會被計入這次的 diff。"
+    read -p "是否仍要繼續執行? (y/n): " ans
+    if [ "$ans" != "y" ]; then
+      echo "已取消。請先確認上述 tag 所在分支是否需要併入 '$CURRENT_BRANCH' 後再執行。"
+      exit 1
+    fi
   fi
   PREV_RELEASE="$LAST_RELEASE_TAG"
   echo "未提供前次 release commit，使用最新 tag: $PREV_RELEASE"
