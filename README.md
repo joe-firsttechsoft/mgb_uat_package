@@ -9,7 +9,7 @@
 - macOS（腳本以 zsh/bash 撰寫並在 macOS 上驗證）
 - Git
 - Node.js（供 `generate_release_xlsx.mjs` 使用 `exceljs` 產生 `.xlsx`；`node_modules` 為 gitignore，首次執行 `generate_release_xlsx.sh` 會自動 `npm install`）
-- 本機已 clone 兆豐 FEP 專案（`mgbfep`），且目前分支為 `FEP_1-3_UAT`（或 `*SIT` 結尾分支）
+- 本機已 clone 兆豐 FEP 專案（`mgbfep`），且目前分支符合 `FEP_<版本>_UAT` / `FEP_<版本>_SIT`（過版測試分支）或 `FEP_<版本>`（PROD 正式分支，無結尾字樣）格式
 
 ## 快速開始
 

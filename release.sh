@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# 這次過版預期使用的分支，非此分支時會詢問是否仍要繼續
-EXPECTED_BRANCH="FEP_1-3-2_UAT"
+# 這次過版預期使用的分支格式，非此格式時會詢問是否仍要繼續
+# 格式：FEP_<版本>_UAT／FEP_<版本>_SIT（過版測試分支）或 FEP_<版本>（PROD 正式分支，無結尾字樣）
+EXPECTED_BRANCH_PATTERN='^FEP_[0-9][0-9.-]*(_UAT|_SIT)?$'
 
 if [ $# -gt 1 ]; then
   echo "Usage: $0 [previous_release_tag_or_commit]"
-  echo " 若省略參數，會依目前分支結尾（UAT/SIT）自動尋找最新的 uat|sit/release/yyMMdd tag 作為前次 release"
+  echo " 若省略參數，會依目前分支（UAT/SIT/PROD）自動尋找最新的 uat|sit|prod/release/yyMMdd tag 作為前次 release"
   exit 1
 fi
 
@@ -24,21 +25,23 @@ fi
 export MGBFEP_PROJECT_DIR="$PROJECT_DIR"
 REPOROOT=$(cd "$PROJECT_DIR" && git rev-parse --show-toplevel)
 
-# 確認目前分支，非預期分支時詢問是否仍要繼續
+# 確認目前分支，非預期格式時詢問是否仍要繼續
 CURRENT_BRANCH=$(cd "$REPOROOT" && git rev-parse --abbrev-ref HEAD)
-if [ "$CURRENT_BRANCH" != "$EXPECTED_BRANCH" ]; then
-  echo "⚠️  目前分支為 '$CURRENT_BRANCH'，預期應為 '$EXPECTED_BRANCH'"
+if ! [[ "$CURRENT_BRANCH" =~ $EXPECTED_BRANCH_PATTERN ]]; then
+  echo "⚠️  目前分支為 '$CURRENT_BRANCH'，非預期的 FEP_<版本>[_UAT|_SIT] 格式"
   read -p "是否仍要繼續執行? (y/n): " ans
   if [ "$ans" != "y" ]; then
-    echo "已取消。請切換到 '$EXPECTED_BRANCH' 分支後再執行。"
+    echo "已取消。請切換到 FEP_<版本>_UAT / FEP_<版本>_SIT / FEP_<版本>（PROD）分支後再執行。"
     exit 1
   fi
 fi
 
-# 依目前分支結尾決定 tag 前綴：*UAT -> uat/release、*SIT -> sit/release，其餘不建立/不自動偵測 tag
+# 依目前分支決定 tag 前綴：*UAT -> uat/release、*SIT -> sit/release、
+# FEP_<版本>（無結尾字樣，PROD 正式分支）-> prod/release，其餘不建立/不自動偵測 tag
 case "$CURRENT_BRANCH" in
   *UAT) TAG_PREFIX="uat/release" ;;
   *SIT) TAG_PREFIX="sit/release" ;;
+  FEP_[0-9]*) TAG_PREFIX="prod/release" ;;
   *) TAG_PREFIX="" ;;
 esac
 
@@ -47,7 +50,7 @@ esac
 # 避免誤選到其他分支上建立、名稱日期較新但實際不在此分支歷史內的 tag
 if [ -z "$PREV_RELEASE" ]; then
   if [ -z "$TAG_PREFIX" ]; then
-    echo "目前分支 '$CURRENT_BRANCH' 非 UAT/SIT 結尾，無法自動判斷 tag 前綴，請手動指定前次 release commit/tag。"
+    echo "目前分支 '$CURRENT_BRANCH' 非 UAT/SIT/PROD 格式，無法自動判斷 tag 前綴，請手動指定前次 release commit/tag。"
     echo "Usage: $0 [previous_release_tag_or_commit]"
     exit 1
   fi
@@ -112,10 +115,10 @@ fi
 # 4⃣ 依 changes.csv 產生「兆豐UAT異動項目」xlsx（異動清單/設定檔/模組更新...）
 "$BASEDIR/generate_release_xlsx.sh" || exit 1
 
-# 5⃣ 標記本次 release tag（依分支結尾決定前綴），作為下次執行的前次 release 依據
-# 分支非 UAT/SIT 結尾時不建立 tag
+# 5⃣ 標記本次 release tag（依分支決定前綴），作為下次執行的前次 release 依據
+# 分支非 UAT/SIT/PROD 格式時不建立 tag
 if [ -z "$TAG_PREFIX" ]; then
-  echo "ℹ️  目前分支 '$CURRENT_BRANCH' 非 UAT/SIT 結尾，不建立 release tag"
+  echo "ℹ️  目前分支 '$CURRENT_BRANCH' 非 UAT/SIT/PROD 格式，不建立 release tag"
 else
   NEW_RELEASE_TAG="${TAG_PREFIX}/$(date +%y%m%d)"
   if (cd "$REPOROOT" && git rev-parse -q --verify "refs/tags/$NEW_RELEASE_TAG" > /dev/null); then
