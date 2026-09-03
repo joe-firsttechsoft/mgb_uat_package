@@ -12,7 +12,7 @@ import { isTestPath, isKeptTestFile, isFepReleaseNotePath } from "./release_excl
 import { parseCsv } from "./release_csv.mjs";
 
 const [, , csvPath, outPath] = process.argv;
-const PROJECT_DIR = process.env.MGBFEP_PROJECT_DIR || path.join(os.homedir(), "Repo/idea_clone/mgbfep");
+const PROJECT_DIR = process.env.MGBFEP_PROJECT_DIR || path.join(os.homedir(), "Repo/idea_clone/mgbfep-UAT");
 const SOURCE_FEP_DIR = path.join(PROJECT_DIR, "source/fep");
 
 if (!csvPath || !outPath) {

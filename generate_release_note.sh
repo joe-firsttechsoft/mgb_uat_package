@@ -16,9 +16,9 @@ fi
 START_COMMIT=$1
 END_COMMIT="HEAD"
 
-PROJECT_DIR="${MGBFEP_PROJECT_DIR:-$HOME/Repo/idea_clone/mgbfep}"
+PROJECT_DIR="${MGBFEP_PROJECT_DIR:-$HOME/Repo/idea_clone/mgbfep-UAT}"
 
-if [ ! -d "$PROJECT_DIR/.git" ]; then
+if [ ! -e "$PROJECT_DIR/.git" ]; then
     echo "Project git directory not found: $PROJECT_DIR"
     echo "Set MGBFEP_PROJECT_DIR to the MGBFEP repository path."
     exit 1

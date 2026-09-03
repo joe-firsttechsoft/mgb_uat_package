@@ -2,20 +2,20 @@
 
 本 repo 是兆豐（MGB）FEP 專案 **SIT → UAT 過版**用的本地工具集：一組 shell script 搭配一支 Node.js（`exceljs`）腳本，將指定 commit 區間的異動自動整理成過版交付包（Release Note、異動清單 CSV、扁平化檔案、以及「兆豐UAT異動項目」Excel）。
 
-> 這是**流程腳本 repo**，不含 FEP 專案原始碼本身；所有腳本實際操作的對象是另一個 repo（環境變數 `MGBFEP_PROJECT_DIR` 指向的 `mgbfep` 專案）。
+> 這是**流程腳本 repo**，不含 FEP 專案原始碼本身；所有腳本實際操作的對象是另一個 repo（環境變數 `MGBFEP_PROJECT_DIR` 指向的 `mgbfep` worktree，預設為 `mgbfep-UAT` 目錄）。
 
 ## 需求
 
 - macOS（腳本以 zsh/bash 撰寫並在 macOS 上驗證）
 - Git
 - Node.js（供 `generate_release_xlsx.mjs` 使用 `exceljs` 產生 `.xlsx`；`node_modules` 為 gitignore，首次執行 `generate_release_xlsx.sh` 會自動 `npm install`）
-- 本機已 clone 兆豐 FEP 專案（`mgbfep`），且目前分支符合 `FEP_<版本>_UAT` / `FEP_<版本>_SIT`（過版測試分支）或 `FEP_<版本>`（PROD 正式分支，無結尾字樣）格式
+- 本機已 clone 兆豐 FEP 專案（`mgbfep`），且已建立對應的 worktree 目錄（預設 `mgbfep-UAT`），目前分支符合 `FEP_<版本>_UAT` / `FEP_<版本>_SIT`（過版測試分支）或 `FEP_<版本>`（PROD 正式分支，無結尾字樣）格式
 
 ## 快速開始
 
 ```bash
-# 指定 MGBFEP 專案路徑（預設 $HOME/Repo/idea_clone/mgbfep）
-export MGBFEP_PROJECT_DIR=/path/to/mgbfep
+# 指定 MGBFEP 專案路徑（預設 $HOME/Repo/idea_clone/mgbfep-UAT）
+export MGBFEP_PROJECT_DIR=/path/to/mgbfep-UAT
 
 # 一般情境：接續上次 release.sh 自動打的 tag，不用帶參數
 ./release.sh
@@ -70,4 +70,4 @@ outputs/
 
 | 變數 | 說明 | 預設值 |
 |---|---|---|
-| `MGBFEP_PROJECT_DIR` | 兆豐 FEP 專案（`mgbfep`）的 repo 路徑，所有 commit／tag 皆針對此 repo 操作 | `$HOME/Repo/idea_clone/mgbfep` |
+| `MGBFEP_PROJECT_DIR` | 兆豐 FEP 專案（`mgbfep`）的 worktree 路徑，所有 commit／tag 皆針對此 repo 操作 | `$HOME/Repo/idea_clone/mgbfep-UAT` |
